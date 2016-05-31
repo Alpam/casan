@@ -29,6 +29,7 @@ class Conf (object):
         'cacheclean': '3600',
         'port:http': '80',
         'port:https': '443',
+        'port:coap': '5683',
         'sslcert': '',
         'sslkey': '',
         'evlog:add': 'False',
@@ -46,6 +47,7 @@ class Conf (object):
         - namespaces: dictionnary indexed by namespace type
         - networks: list of tuples (type, dev, mtu, net-specific-subinfo)
         - http: list of tuples (scheme, addr, port, sslcert, sslkey)
+        - coap: list of ???
         Private variables:
         - _config: configparser.ConfigParser object
         """
@@ -54,6 +56,7 @@ class Conf (object):
         self.networks = []
         self.evlog = {}
         self.http = []
+        self.coap = []
         self.slaves = []
 
         self._config = {}
@@ -84,7 +87,6 @@ class Conf (object):
         # set reasonnable defaults
         self._parse_timers ({})
         self._parse_evlog ({})
-
         for sect in self._config.sections ():
             w = sect.split ()
             l = len (w)
@@ -96,6 +98,8 @@ class Conf (object):
                 self._parse_namespace (self._config [sect], w [1])
             elif w [0] == 'http' and l == 2:
                 self._parse_http (self._config [sect], w [1])
+            elif w [0] == 'coap' and l == 2:
+                self._parse_coap (self._config [sect], w [1])
             elif w [0] == 'network' and l == 2:
                 self._parse_network (self._config [sect], w [1])
             elif w [0] == 'slave' and l == 2:
@@ -176,6 +180,21 @@ class Conf (object):
         spec = (p.scheme, p.hostname, port, sslcert, sslkey)
         self.http.append (spec)
 
+    def _parse_coap (self, sectab, name):
+        """
+        Parse a "coap" section to specify an COAP server instance
+        'name' is just an (unused) name
+        Section contents are:
+        - url: base URL of COAP server
+        """
+
+        e = "coap " + name
+        url = self._getdefault (sectab, 'url', None, e)
+        print("url:"+url)
+        p = urllib.parse.urlparse (url)
+        if p.scheme not in ['coap']:
+            raise RuntimeError ("Invalid URL scheme for " + e)
+
     def _parse_network (self, sectab, name):
         """
         Parse a "network" section to specify a CASAN network
@@ -255,5 +274,4 @@ class Conf (object):
             raise RuntimeError ("No '{}' value for {}".format (key, ectx))
         else:
             v = self._defval [defkey]
-
         return v
