@@ -190,7 +190,6 @@ class Conf (object):
 
         e = "coap " + name
         url = self._getdefault (sectab, 'url', None, e)
-        print("url:"+url)
         p = urllib.parse.urlparse (url)
         if p.scheme not in ['coap']:
             raise RuntimeError ("Invalid URL scheme for " + e)
