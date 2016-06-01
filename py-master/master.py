@@ -25,16 +25,19 @@ import g
 
 
     ######################################################################
-    # CoAP handler for hello Ressource
+    # class handler for the tree resources of the server CoAP
     ######################################################################
 
-class HW(resource.Resource):
-    def __init__(self):
-        super(HW, self).__init__()
+class Return_admin_coap(resource.Resource,object):
+    """
+    Return the asked file
+    """
+    def __init__(self, txt):
+        super(Return_admin_coap, self).__init__()
+        self._txt = txt
     @asyncio.coroutine
     def render_get(self, request):
-        yield from asyncio.sleep(3)
-        payload = "Hello World".encode('ascii')
+        payload = str(self._txt).encode('ascii')
         return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
 
 class Master (object):
@@ -143,7 +146,10 @@ class Master (object):
 
         root_CoAP = resource.Site()
         root_CoAP.add_resource(('well-known','core'), resource.WKCResource(root_CoAP.get_resources_as_linkheader))
-        root_CoAP.add_resource(('hello',),HW())
+        root_CoAP.add_resource(('admin','conf'),Return_admin_coap(self._conf))
+        root_CoAP.add_resource(('admin','run'),Return_admin_coap(self._engine))
+        root_CoAP.add_resource(('admin','slave'),Return_admin_coap(self._conf))
+        root_CoAP.add_resource(('admin','cache'),Return_admin_coap(self._cache))
         asyncio.async(aiocoap.Context.create_server_context(root_CoAP))
 
         #
