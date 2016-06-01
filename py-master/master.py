@@ -28,12 +28,12 @@ import g
     # class handler for the tree resources of the server CoAP
     ######################################################################
 
-class Return_admin_coap(resource.Resource,object):
+class GETONLY_admin_coap(resource.Resource,object):
     """
     Return the asked file
     """
     def __init__(self, txt):
-        super(Return_admin_coap, self).__init__()
+        super(GETONLY_admin_coap, self).__init__()
         self._txt = txt
     @asyncio.coroutine
     def render_get(self, request):
@@ -146,10 +146,16 @@ class Master (object):
 
         root_CoAP = resource.Site()
         root_CoAP.add_resource(('well-known','core'), resource.WKCResource(root_CoAP.get_resources_as_linkheader))
-        root_CoAP.add_resource(('admin','conf'),Return_admin_coap(self._conf))
-        root_CoAP.add_resource(('admin','run'),Return_admin_coap(self._engine))
-        root_CoAP.add_resource(('admin','slave'),Return_admin_coap(self._conf))
-        root_CoAP.add_resource(('admin','cache'),Return_admin_coap(self._cache))
+        root_CoAP.add_resource(('admin','conf'),GETONLY_admin_coap(self._conf))
+        root_CoAP.add_resource(('admin','run'),GETONLY_admin_coap(self._engine))
+        root_CoAP.add_resource(('admin','slave'),GETONLY_admin_coap(self._conf))
+        root_CoAP.add_resource(('admin','cache'),GETONLY_admin_coap(self._cache))
+        """
+        ilfaudrait catch l'id de chaque esclave et faire une boucle pour passer chacun
+        puis dans cette boucle faire un auter boucle sur leur Ressource
+        et donc créer autant de ressource que d'escalve pour le coap
+        """
+        #root_CoAP.add_resource(('casan',)
         asyncio.async(aiocoap.Context.create_server_context(root_CoAP))
 
         #
