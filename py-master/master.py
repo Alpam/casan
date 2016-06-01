@@ -1,7 +1,7 @@
 """
 This module contains the Casan master class
 """
-
+import logging
 import html
 
 try:
@@ -12,6 +12,8 @@ except ImportError:
 import asyncio
 import aiohttp
 import aiohttp.web
+import aiocoap.resource as resource
+import aiocoap
 
 import observer
 import engine
@@ -21,6 +23,19 @@ import msg
 import option
 import g
 
+
+    ######################################################################
+    # CoAP handler for hello Ressource
+    ######################################################################
+
+class HW(resource.Resource):
+    def __init__(self):
+        super(HW, self).__init__()
+    @asyncio.coroutine
+    def render_get(self, request):
+        yield from asyncio.sleep(3)
+        payload = "Hello World".encode('ascii')
+        return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
 
 class Master (object):
     """
@@ -52,7 +67,6 @@ class Master (object):
         #
 
         app = aiohttp.web.Application ()
-
         for ns in self._conf.namespaces:
             uri = self._conf.namespaces [ns]
 
@@ -115,6 +129,22 @@ class Master (object):
         self._engine.start (self._conf, loop)
 
         g.d.m ('master', 'Server ready')
+
+        #
+        # Logging setup
+        #
+
+        logging.basicConfig(level=logging.INFO)
+        logging.getLogger("coap-server").setLevel(logging.DEBUG)
+
+        #
+        # Ressource tree creation
+        #
+
+        root_CoAP = resource.Site()
+        root_CoAP.add_resource(('well-known','core'), resource.WKCResource(root_CoAP.get_resources_as_linkheader))
+        root_CoAP.add_resource(('hello',),HW())
+        asyncio.async(aiocoap.Context.create_server_context(root_CoAP))
 
         #
         # Main loop
