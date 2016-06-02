@@ -24,10 +24,6 @@ import option
 import g
 
 
-    ######################################################################
-    # class handler for the tree resources of the server CoAP
-    ######################################################################
-
 class GETONLY_admin_coap(resource.Resource,object):
     """
     Return the asked file
