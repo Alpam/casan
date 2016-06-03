@@ -73,13 +73,15 @@ class Engine (object):
         return s
 
     # pylint: disable=too-many-locals
-    def start (self, conf, loop):
+    def start (self, conf, loop, coap_server):
         """
         Initialize the engine
         :param conf: parsed configuration
         :type  conf: class conf.Conf
         :param loop: main event loop (as returned by asyncio.get_event_loop)
         :type  loop: class asyncio.EventLoop XXX
+        :param coap_server: link to the running coap server
+        :type coap_server: class server_coap.CoAP_Server
         """
 
         self._conf = conf
@@ -93,7 +95,7 @@ class Engine (object):
         #
 
         for (sid, ttl, mtu) in self._conf.slaves:
-            self._slaves.append (slave.Slave (loop, sid, ttl, mtu))
+            self._slaves.append (slave.Slave (loop, sid, ttl, mtu, coap_server))
 
         #
         # Configure L2 networks
