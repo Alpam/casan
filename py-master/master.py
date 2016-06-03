@@ -1,7 +1,7 @@
 """
 This module contains the Casan master class
 """
-import logging
+#import logging
 import html
 
 try:
@@ -9,11 +9,11 @@ try:
 except ImportError:
     ssl = None
 
-import asyncio
+from server_coap import *
+from server_coap import asyncio
 import aiohttp
 import aiohttp.web
-import aiocoap.resource as resource
-import aiocoap
+
 
 import observer
 import engine
@@ -22,19 +22,6 @@ import slave
 import msg
 import option
 import g
-
-
-class GETONLY_admin_coap(resource.Resource,object):
-    """
-    Return the asked file
-    """
-    def __init__(self, txt):
-        super(GETONLY_admin_coap, self).__init__()
-        self._txt = txt
-    @asyncio.coroutine
-    def render_get(self, request):
-        payload = str(self._txt).encode('ascii')
-        return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
 
 class Master (object):
     """
@@ -121,38 +108,27 @@ class Master (object):
             loop.run_until_complete (f)
 
         #
+        # Start CoAP server
+        #
+
+        coap_server = CoAP_Server()
+
+        #
         # Start CASAN engine (i.e. initialize events for the event loop)
         #
 
         self._engine = engine.Engine ()
-        self._engine.start (self._conf, loop)
+        self._engine.start (self._conf, loop, coap_server)
 
         g.d.m ('master', 'Server ready')
 
         #
-        # Logging setup
+        # Ressource static tree creation
         #
-
-        logging.basicConfig(level=logging.INFO)
-        logging.getLogger("coap-server").setLevel(logging.DEBUG)
-
-        #
-        # Ressource tree creation
-        #
-
-        root_CoAP = resource.Site()
-        root_CoAP.add_resource(('well-known','core'), resource.WKCResource(root_CoAP.get_resources_as_linkheader))
-        root_CoAP.add_resource(('admin','conf'),GETONLY_admin_coap(self._conf))
-        root_CoAP.add_resource(('admin','run'),GETONLY_admin_coap(self._engine))
-        root_CoAP.add_resource(('admin','slave'),GETONLY_admin_coap(self._conf))
-        root_CoAP.add_resource(('admin','cache'),GETONLY_admin_coap(self._cache))
-        """
-        ilfaudrait catch l'id de chaque esclave et faire une boucle pour passer chacun
-        puis dans cette boucle faire un auter boucle sur leur Ressource
-        et donc créer autant de ressource que d'escalve pour le coap
-        """
-        #root_CoAP.add_resource(('casan',)
-        asyncio.async(aiocoap.Context.create_server_context(root_CoAP))
+        coap_server.new_resource("coap://admin/conf","GO",self._conf)
+        coap_server.new_resource("/admin/run","GO",self._engine)
+        coap_server.new_resource(('admin','slave'),"GO",self._conf)
+        coap_server.new_resource(('admin','cache'),"GO",self._cache)
 
         #
         # Main loop
