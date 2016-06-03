@@ -5,6 +5,8 @@ This module contains the Slave class
 import datetime
 import re
 
+from server_coap import *
+
 import msg
 import resource
 import g
@@ -22,7 +24,7 @@ class Slave (object):
         INACTIVE = 0
         RUNNING = 1
 
-    def __init__(self, loop, sid, ttl, mtu):
+    def __init__(self, loop, sid, ttl, mtu, coap):
         """
         Default constructor
         """
@@ -37,6 +39,8 @@ class Slave (object):
         self.addr = None                    # Address
         self.status = self.Status.INACTIVE  # Current status
         self.reslist = []                   # Resource list
+
+        self.coap_server = coap             # Link to the CoAP server
 
         # Private attributes
         self._disc_curmtu = 0               # Advertised by slave (Discov msg)
@@ -103,13 +107,15 @@ class Slave (object):
         self._timeout = None
         g.d.m ('slave', 'Slave {}: status set to INACTIVE'.format (self.sid))
         g.e.add ('master', 'slave {} status set to INACTIVE'.format (self.sid))
+        for rid in self.reslist :
+            self.coap_server.remove_path(("casan", str(self.sid), rid._path))
 
     ##########################################################################
     # Various utilities
     ##########################################################################
 
     def isrunning (self):
-        return self.status == self.Status.RUNNING
+       return self.status == self.Status.RUNNING
 
     ##########################################################################
     # Initialize values from a Discover message
@@ -176,6 +182,13 @@ class Slave (object):
                     self.curmtu = self._disc_curmtu
                     self.status = self.Status.RUNNING
 
+                    #
+                    # build path for Coap Server
+                    #
+
+                    for rid in self.reslist :
+                        self.coap_server.new_resource(("casan", str(self.sid), rid._path),"HW")
+ 
                     #
                     # Association timer: arrange for _slave_timeout ()
                     # to be called when the timer will expire
