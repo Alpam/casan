@@ -187,7 +187,7 @@ class Slave (object):
                     #
 
                     for rid in self.reslist :
-                        self.coap_server.new_resource(("casan", str(self.sid), rid._path),"HW")
+                        self.coap_server.new_resource(("casan", str(self.sid), rid._path),"casan_slave","create_res")
  
                     #
                     # Association timer: arrange for _slave_timeout ()
