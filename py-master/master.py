@@ -11,6 +11,8 @@ except ImportError:
 
 from server_coap import *
 from server_coap import asyncio
+from server_coap import msg
+from server_coap import option
 import aiohttp
 import aiohttp.web
 
@@ -19,8 +21,6 @@ import observer
 import engine
 import cache
 import slave
-import msg
-import option
 import g
 
 class Master (object):
@@ -111,7 +111,7 @@ class Master (object):
         # Start CoAP server
         #
 
-        coap_server = CoAP_Server()
+        coap_server = CoAP_Server(self)
 
         #
         # Start CASAN engine (i.e. initialize events for the event loop)
@@ -125,10 +125,10 @@ class Master (object):
         #
         # Ressource static tree creation
         #
-        coap_server.new_resource("coap://admin/conf","GO",self._conf)
-        coap_server.new_resource("/admin/run","GO",self._engine)
-        coap_server.new_resource(('admin','slave'),"GO",self._conf)
-        coap_server.new_resource(('admin','cache'),"GO",self._cache)
+        coap_server.new_resource("coap://admin/conf","GO","conf")
+        coap_server.new_resource("/admin/run","GO","engine")
+        coap_server.new_resource(('admin','slave'),"GO","conf")
+        coap_server.new_resource(('admin','cache'),"GO","cache")
 
         #
         # Main loop
@@ -311,7 +311,6 @@ class Master (object):
         #
         # Find slave and resource
         #
-
         sl = self._engine.find_slave (sid)
         if sl is None:
             raise aiohttp.web.HTTPNotFound ()
