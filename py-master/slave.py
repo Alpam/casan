@@ -187,6 +187,7 @@ class Slave (object):
                     #
 
                     for rid in self.reslist :
+                        #XXX cf server_coap, CASAN_slave, render_get
                         self.coap_server.new_resource(("casan", str(self.sid), rid._path),"casan_slave","create_res")
  
                     #
