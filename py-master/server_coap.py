@@ -16,10 +16,7 @@ class CASAN_slave(resource.Resource,object):
         self._cache = list[1]
         self._engine = list[0]
 
-
-    @asyncio.coroutine
-    def render_get(self, request):
-
+    def build_request(self,request):
         #XXX the path reception is weak, only one pattern is allowed **/sid/res
         #cf CoAP_Server, new_resource
         ll_ssp=list(request.opt._options.keys())
@@ -46,7 +43,6 @@ class CASAN_slave(resource.Resource,object):
         if res is None:
             return None
 
-
         #
         # Build request
         #
@@ -71,6 +67,103 @@ class CASAN_slave(resource.Resource,object):
         for p in vpath:
             mreq.optlist.append (option.Option (up, optval=p))
 
+        return mreq
+
+    @asyncio.coroutine
+    def render_put(self,request):
+        print('PUT payload: %s' % request.payload)
+        mreq=self.build_request(request)
+
+        #
+        # Is the request already present in the cache?
+        #
+
+        #mc = self._cache.put (mreq)
+        #if mc is not None:
+            # Request found in the cache
+         #   mreq = mc
+          #  mrep = mc.req_rep
+
+        #else:
+            # Request not found in the cache: send it and wait for a result
+        mrep = yield from mreq.send_request ()
+
+         #   if mrep is not None:
+                # Add the request (and the linked answer) to the cache
+          #      self._cache.add (mreq)
+           # else:
+            #    return aiocoap.error.RequestTimedOut (Error)
+
+        # Python black magic: aiohttp.web.Response expects a
+        # bytes argument, but mrep.payload is a bytearray
+        payload = mrep.payload.decode ().encode ('ascii')
+        return aiocoap.Message(code=aiocoap.CHANGED, payload=payload)
+
+    @asyncio.coroutine
+    def render_post(self,request):
+        print('POST payload: %s' % request.payload)
+        mreq=self.build_request(request)
+
+        #
+        # Is the request already present in the cache?
+        #
+
+        #mc = self._cache.put (mreq)
+        #if mc is not None:
+            # Request found in the cache
+         #   mreq = mc
+          #  mrep = mc.req_rep
+
+        #else:
+            # Request not found in the cache: send it and wait for a result
+        mrep = yield from mreq.send_request ()
+
+         #   if mrep is not None:
+                # Add the request (and the linked answer) to the cache
+          #      self._cache.add (mreq)
+           # else:
+            #    return aiocoap.error.RequestTimedOut (Error)
+
+        # Python black magic: aiohttp.web.Response expects a
+        # bytes argument, but mrep.payload is a bytearray
+        payload = mrep.payload.decode ().encode ('ascii')
+        return aiocoap.Message(code=aiocoap.CHANGED, payload=payload)
+
+    @asyncio.coroutine
+    def render_delete(self,request):
+        print('DELETE payload: %s' % request.payload)
+        mreq=self.build_request(request)
+
+        #
+        # Is the request already present in the cache?
+        #
+
+        #mc = self._cache.put (mreq)
+        #if mc is not None:
+            # Request found in the cache
+         #   mreq = mc
+          #  mrep = mc.req_rep
+
+        #else:
+            # Request not found in the cache: send it and wait for a result
+        mrep = yield from mreq.send_request ()
+
+         #   if mrep is not None:
+                # Add the request (and the linked answer) to the cache
+          #      self._cache.add (mreq)
+           # else:
+            #    return aiocoap.error.RequestTimedOut (Error)
+
+        # Python black magic: aiohttp.web.Response expects a
+        # bytes argument, but mrep.payload is a bytearray
+        payload = mrep.payload.decode ().encode ('ascii')
+        return aiocoap.Message(code=aiocoap.CHANGED, payload=payload)
+
+    @asyncio.coroutine
+    def render_get(self, request):
+
+        mreq=self.build_request(request)
+
         #
         # Is the request already present in the cache?
         #
@@ -89,14 +182,12 @@ class CASAN_slave(resource.Resource,object):
                 # Add the request (and the linked answer) to the cache
                 self._cache.add (mreq)
             else:
-                return aiocoap.error.Request.Timeout (Error)
+                return aiocoap.error.RequestTimedOut (Error)
 
         # Python black magic: aiohttp.web.Response expects a
         # bytes argument, but mrep.payload is a bytearray
         payload = mrep.payload.decode ().encode ('ascii')
         return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
-
-
 
 class HW(resource.Resource):
     """
