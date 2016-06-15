@@ -510,7 +510,6 @@ void Msg::set_payload (uint8_t *payload, uint16_t paylen)
     memcpy (payload_, payload, paylen_) ;
 }
 
-
 /******************************************************************************
  * Option management
  */

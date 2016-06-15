@@ -65,7 +65,7 @@ Casan::Casan (l2net *l2, int mtu, long int slaveid)
     status_ = SL_COLDSTART ;
 }
 
-/*
+/**
  * @brief Reset CASAN engine
  *
  * This method is used to reset the CASAN engine.
