@@ -34,6 +34,7 @@ Debug debug ;
 
 uint8_t process_temp1 (Msg *in, Msg *out) 
 {
+		out->print();
     char payload [10] ;
 
     out->max_age (true, 0) ;		// answer is not cachable
@@ -44,7 +45,35 @@ uint8_t process_temp1 (Msg *in, Msg *out)
     snprintf (payload, 10, "%d", sensorValue) ;
 
     out->set_payload ((uint8_t *) payload,  strlen (payload)) ;
+		in->print();
 
+    return COAP_RETURN_CODE (2, 5) ;
+}
+
+uint8_t process_put (Msg *in, Msg *out) 
+{
+    out->max_age (true, 0) ;		// answer is not cachable
+
+    DBGLN1 (F ("process_put")) ;
+		in->print();
+    out->set_payload (in->get_payload(), in->get_paylen()) ;
+    return COAP_RETURN_CODE (2, 5) ;
+}
+
+uint8_t process_delete (Msg *in, Msg *out) 
+{
+    out->max_age (true, 0) ;		// answer is not cachable
+
+    DBGLN1 (F ("process_delete")) ;
+
+    return COAP_RETURN_CODE (2, 5) ;
+}
+
+uint8_t process_post (Msg *in, Msg *out) 
+{
+    out->max_age (true, 0) ;		// answer is not cachable
+
+    DBGLN1 (F ("process_post")) ;
     return COAP_RETURN_CODE (2, 5) ;
 }
 
@@ -98,6 +127,9 @@ void setup ()
 
     Resource *r1 = new Resource ("t1", "Desk temp", "celsius") ;
     r1->handler (COAP_CODE_GET, process_temp1) ;
+    r1->handler (COAP_CODE_PUT, process_put) ;
+    r1->handler (COAP_CODE_POST, process_post) ;
+    r1->handler (COAP_CODE_DELETE, process_delete) ;
     casan->register_resource (r1) ;
 
     Resource *r2 = new Resource ("t2", "B201 temp", "celsius") ;
