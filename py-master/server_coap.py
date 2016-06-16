@@ -73,86 +73,21 @@ class CASAN_slave(resource.Resource,object):
     @asyncio.coroutine
     def render_put(self,request):
         mreq=self.build_request(request)
-        #
-        # Is the request already present in the cache?
-        #
-
-        #mc = self._cache.put (mreq)
-        #if mc is not None:
-            # Request found in the cache
-         #   mreq = mc
-          #  mrep = mc.req_rep
-
-        #else:
-            # Request not found in the cache: send it and wait for a result
-        mrep = yield from mreq.send_request ()
-
-         #   if mrep is not None:
-                # Add the request (and the linked answer) to the cache
-          #      self._cache.add (mreq)
-           # else:
-            #    return aiocoap.error.RequestTimedOut (Error)
-
-        # Python black magic: aiohttp.web.Response expects a
-        # bytes argument, but mrep.payload is a bytearray
+                mrep = yield from mreq.send_request ()
         payload = mrep.payload.decode ().encode ('ascii')
         return aiocoap.Message(code=aiocoap.CHANGED, payload=payload)
 
     @asyncio.coroutine
     def render_post(self,request):
         mreq=self.build_request(request)
-
-        #
-        # Is the request already present in the cache?
-        #
-
-        #mc = self._cache.put (mreq)
-        #if mc is not None:
-            # Request found in the cache
-         #   mreq = mc
-          #  mrep = mc.req_rep
-
-        #else:
-            # Request not found in the cache: send it and wait for a result
         mrep = yield from mreq.send_request ()
-
-         #   if mrep is not None:
-                # Add the request (and the linked answer) to the cache
-          #      self._cache.add (mreq)
-           # else:
-            #    return aiocoap.error.RequestTimedOut (Error)
-
-        # Python black magic: aiohttp.web.Response expects a
-        # bytes argument, but mrep.payload is a bytearray
         payload = mrep.payload.decode ().encode ('ascii')
         return aiocoap.Message(code=aiocoap.CHANGED, payload=payload)
 
     @asyncio.coroutine
     def render_delete(self,request):
         mreq=self.build_request(request)
-
-        #
-        # Is the request already present in the cache?
-        #
-
-        #mc = self._cache.put (mreq)
-        #if mc is not None:
-            # Request found in the cache
-         #   mreq = mc
-          #  mrep = mc.req_rep
-
-        #else:
-            # Request not found in the cache: send it and wait for a result
         mrep = yield from mreq.send_request ()
-
-         #   if mrep is not None:
-                # Add the request (and the linked answer) to the cache
-          #      self._cache.add (mreq)
-           # else:
-            #    return aiocoap.error.RequestTimedOut (Error)
-
-        # Python black magic: aiohttp.web.Response expects a
-        # bytes argument, but mrep.payload is a bytearray
         payload = mrep.payload.decode ().encode ('ascii')
         return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
 
