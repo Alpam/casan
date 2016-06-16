@@ -51,6 +51,7 @@ class CASAN_slave(resource.Resource,object):
         mreq.peer = sl.addr
         mreq.l2n = sl.l2n
         mreq.msgtype = msg.Msg.Types.CON
+        mreq.payload = request.payload
 
         if meth == 'GET':
             mreq.msgcode = msg.Msg.Codes.GET
@@ -71,9 +72,7 @@ class CASAN_slave(resource.Resource,object):
 
     @asyncio.coroutine
     def render_put(self,request):
-        print('PUT payload: %s' % request.payload)
         mreq=self.build_request(request)
-
         #
         # Is the request already present in the cache?
         #
@@ -101,7 +100,6 @@ class CASAN_slave(resource.Resource,object):
 
     @asyncio.coroutine
     def render_post(self,request):
-        print('POST payload: %s' % request.payload)
         mreq=self.build_request(request)
 
         #
@@ -131,7 +129,6 @@ class CASAN_slave(resource.Resource,object):
 
     @asyncio.coroutine
     def render_delete(self,request):
-        print('DELETE payload: %s' % request.payload)
         mreq=self.build_request(request)
 
         #
@@ -157,7 +154,7 @@ class CASAN_slave(resource.Resource,object):
         # Python black magic: aiohttp.web.Response expects a
         # bytes argument, but mrep.payload is a bytearray
         payload = mrep.payload.decode ().encode ('ascii')
-        return aiocoap.Message(code=aiocoap.CHANGED, payload=payload)
+        return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
 
     @asyncio.coroutine
     def render_get(self, request):
@@ -167,7 +164,6 @@ class CASAN_slave(resource.Resource,object):
         #
         # Is the request already present in the cache?
         #
-
         mc = self._cache.get (mreq)
         if mc is not None:
             # Request found in the cache
@@ -183,22 +179,9 @@ class CASAN_slave(resource.Resource,object):
                 self._cache.add (mreq)
             else:
                 return aiocoap.error.RequestTimedOut (Error)
-
         # Python black magic: aiohttp.web.Response expects a
         # bytes argument, but mrep.payload is a bytearray
         payload = mrep.payload.decode ().encode ('ascii')
-        return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
-
-class HW(resource.Resource):
-    """
-    Said HELLO
-    """
-    def __init(self):
-        super(HW, self).__init__()
-
-    @asyncio.coroutine
-    def render_get(self, request):
-        payload = ("Hello World").encode('ascii')
         return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
 
 class GETONLY_coap(resource.Resource,object):

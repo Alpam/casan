@@ -371,8 +371,12 @@ class Msg (object):
         #
 
         if len (self.payload) > 0:
-            self.bmsg.append (b'\xff')
+            #print(self.bmsg)
+            #print(self.payload)
+            self.bmsg.append (0xff)
+            #print(self.bmsg)
             self.bmsg += self.payload
+            #print(self.bmsg)
 
         self._ntrans = 0
 
