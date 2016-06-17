@@ -73,7 +73,7 @@ class CASAN_slave(resource.Resource,object):
     @asyncio.coroutine
     def render_put(self,request):
         mreq=self.build_request(request)
-                mrep = yield from mreq.send_request ()
+        mrep = yield from mreq.send_request ()
         payload = mrep.payload.decode ().encode ('ascii')
         return aiocoap.Message(code=aiocoap.CHANGED, payload=payload)
 

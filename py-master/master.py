@@ -330,7 +330,7 @@ class Master (object):
         mreq.peer = sl.addr
         mreq.l2n = sl.l2n
         mreq.msgtype = msg.Msg.Types.CON
-        mreq.payload = request.payload
+        mreq.payload = b'request.payload'
 
         if meth == 'GET':
             mreq.msgcode = msg.Msg.Codes.GET
