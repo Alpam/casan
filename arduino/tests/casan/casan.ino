@@ -34,7 +34,6 @@ Debug debug ;
 
 uint8_t process_temp1 (Msg *in, Msg *out) 
 {
-		out->print();
     char payload [10] ;
 
     out->max_age (true, 0) ;		// answer is not cachable
@@ -45,7 +44,7 @@ uint8_t process_temp1 (Msg *in, Msg *out)
     snprintf (payload, 10, "%d", sensorValue) ;
 
     out->set_payload ((uint8_t *) payload,  strlen (payload)) ;
-		in->print();
+
 
     return COAP_RETURN_CODE (2, 5) ;
 }
@@ -55,7 +54,6 @@ uint8_t process_put (Msg *in, Msg *out)
     out->max_age (true, 0) ;		// answer is not cachable
 
     DBGLN1 (F ("process_put")) ;
-		in->print();
     out->set_payload (in->get_payload(), in->get_paylen()) ;
     return COAP_RETURN_CODE (2, 5) ;
 }
@@ -65,7 +63,7 @@ uint8_t process_delete (Msg *in, Msg *out)
     out->max_age (true, 0) ;		// answer is not cachable
 
     DBGLN1 (F ("process_delete")) ;
-
+    out->set_payload (in->get_payload(), in->get_paylen()) ;
     return COAP_RETURN_CODE (2, 5) ;
 }
 
@@ -74,6 +72,7 @@ uint8_t process_post (Msg *in, Msg *out)
     out->max_age (true, 0) ;		// answer is not cachable
 
     DBGLN1 (F ("process_post")) ;
+    out->set_payload (in->get_payload(), in->get_paylen()) ;
     return COAP_RETURN_CODE (2, 5) ;
 }
 

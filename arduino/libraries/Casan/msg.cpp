@@ -234,7 +234,7 @@ bool Msg::coap_decode (uint8_t rbuf [], size_t len, bool truncated)
 	    }
 	}
 
-	paylen_ = len - i ;
+	paylen_ = len - i;// (- i)
 	if (! truncated && success && paylen_ > 0)
 	{
 	    if (rbuf [i] != 0xff)
@@ -245,6 +245,7 @@ bool Msg::coap_decode (uint8_t rbuf [], size_t len, bool truncated)
 	    {
 		i++ ;
 		set_payload (rbuf + i, paylen_) ;
+		paylen_ = paylen_ - 1;
 	    }
 	}
 	else paylen_ = 0 ;			// protect further operations
