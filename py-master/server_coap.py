@@ -95,7 +95,6 @@ class CASAN_slave(resource.Resource,object):
     def render_get(self, request):
 
         mreq=self.build_request(request)
-
         #
         # Is the request already present in the cache?
         #
