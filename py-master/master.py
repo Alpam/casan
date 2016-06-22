@@ -125,6 +125,7 @@ class Master (object):
         #
         # Ressource static tree creation
         #
+        coap_server.new_resource(('.well-known','casan'), "GC","engine")
         coap_server.new_resource("coap://admin/conf","GO","conf")
         coap_server.new_resource("/admin/run","GO","engine")
         coap_server.new_resource(('admin','slave'),"GO","conf")
