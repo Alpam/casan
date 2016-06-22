@@ -107,8 +107,7 @@ class Slave (object):
         self._timeout = None
         g.d.m ('slave', 'Slave {}: status set to INACTIVE'.format (self.sid))
         g.e.add ('master', 'slave {} status set to INACTIVE'.format (self.sid))
-        for rid in self.reslist :
-            self.coap_server.remove_path(("casan", str(self.sid), rid._path))
+
 
     ##########################################################################
     # Various utilities
