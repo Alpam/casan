@@ -125,10 +125,40 @@ class GETONLY_coap(resource.Resource,object):
     def __init__(self, txt):
         super(GETONLY_coap, self).__init__()
         self._txt = txt
+
     @asyncio.coroutine
     def render_get(self, request):
         payload = str(self._txt).encode('ascii')
         return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
+
+class GET_casan(resource.Resource,object):
+    """
+    Return the asked file
+    """
+    def __init__(self, txt):
+        super(GET_casan, self).__init__()
+        self._txt = txt
+
+    @asyncio.coroutine
+    def render_get(self, request):
+        payload = self._txt.resource_list ().encode()
+        return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
+
+
+class OBS_CASAN_slave(resource.ObservableResource,object):
+    """
+    Start observation on a resource.
+    """
+    def __init__(self, request):
+        super(OBS_CASAN_slave, slef).__init__()
+        self._cache = list[1]
+        self._engine = list[0]
+
+    @asyncio.coroutine
+    def notify(self):
+        self.updated_state()
+        asyncio.get_event_loop().call_later(60, self.notify)
+        
 
 class CoAP_Server(object):
     """
@@ -166,8 +196,8 @@ class CoAP_Server(object):
 
         if cls == "GO":
             resource_cls = GETONLY_coap
-        elif cls == "HW":
-            resource_cls = HW
+        elif cls == "GC":
+            resource_cls = GET_casan
         elif cls == "casan_slave":
             resource_cls = CASAN_slave
         else :
