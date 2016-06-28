@@ -13,11 +13,11 @@ from server_coap import *
 from server_coap import asyncio
 from server_coap import msg
 from server_coap import option
+from server_coap import observer
 import aiohttp
 import aiohttp.web
 
 
-import observer
 import engine
 import cache
 import slave
@@ -130,7 +130,6 @@ class Master (object):
         coap_server.new_resource("/admin/run","GO","engine")
         coap_server.new_resource(('admin','slave'),"GO","conf")
         coap_server.new_resource(('admin','cache'),"GO","cache")
-
         #
         # Main loop
         #
