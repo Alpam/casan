@@ -1,11 +1,13 @@
 """
 This module contains the server CoAP class
 """
+import datetime
 import asyncio
 import aiocoap.resource as resource
 import aiocoap
 import msg
 import option
+import observer
 
 class CASAN_slave(resource.Resource,object):
     """
@@ -19,6 +21,11 @@ class CASAN_slave(resource.Resource,object):
     def build_request(self,request):
         #XXX the path reception is weak, only one pattern is allowed **/sid/res
         #cf CoAP_Server, new_resource
+        """
+        ll_ssp is a list of two aiocoap object, the following code extract the uri
+        from them.
+        """
+        
         ll_ssp=list(request.opt._options.keys())
         list_ssp=list()
         for ssp in request.opt._options[ll_ssp[0]]:
@@ -144,21 +151,67 @@ class GET_casan(resource.Resource,object):
         payload = self._txt.resource_list ().encode()
         return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
 
+    @asyncio.coroutine
+    def render_delete(self, request):
+        payload = self._txt.resource_list ().encode()
+        return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
 
 class OBS_CASAN_slave(resource.ObservableResource,object):
-    """
-    Start observation on a resource.
-    """
-    def __init__(self, request):
-        super(OBS_CASAN_slave, slef).__init__()
-        self._cache = list[1]
+    def __init__(self,list):
+        super(OBS_CASAN_slave, self).__init__()
         self._engine = list[0]
+        self._cache = list[1]
+        self.notify()
 
-    @asyncio.coroutine
+    def start_obs_res(self,request):
+
+        ll_ssp=list(request.opt._options.keys())
+        list_ssp=list()
+        for ssp in request.opt._options[ll_ssp[0]]:
+            list_ssp.append(ssp)
+        vpath=list()
+        vpath.append(str(list_ssp[-1]))
+        meth = str(request.code)
+        token=request.token
+        sid = str(list_ssp[-2])
+        qs = request.payload
+
+        #
+        # Find slave
+        #
+
+        sl = self._engine.find_slave (sid)
+        if sl is None:
+            raise aiocoap.error.NotObservable ()
+
+        obs = sl.find_observer (vpath, token)
+
+        #
+        # Find slave and resource
+        #
+
+        if obs is None:
+            obs = observer.Observer (sl, vpath, token)
+            sl.add_observer (obs)
+
+        return
+
     def notify(self):
         self.updated_state()
-        asyncio.get_event_loop().call_later(60, self.notify)
-        
+        asyncio.get_event_loop().call_later(6, self.notify)
+
+    def update_observation_count(self, count):
+        if count:
+            # not that it's actually implemented like that here -- unconditional updating works just as well
+            print("Keeping the clock nearby to trigger observations")
+        else:
+            print("Stowing away the clock until someone asks again")
+
+    @asyncio.coroutine
+    def render_get(self, request):
+        self.start_obs_res(request)
+        payload = datetime.datetime.now().strftime("%Y-%m-%d %H:%M").encode('ascii')
+        return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
 
 class CoAP_Server(object):
     """
@@ -200,6 +253,8 @@ class CoAP_Server(object):
             resource_cls = GET_casan
         elif cls == "casan_slave":
             resource_cls = CASAN_slave
+        elif cls == "obs_slave":
+            resource_cls =OBS_CASAN_slave
         else :
             print("No type given for the new coap resource.\nNothing done.")
             return
