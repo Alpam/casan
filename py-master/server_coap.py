@@ -12,6 +12,8 @@ import observer
 class CASAN_slave(resource.Resource,object):
     """
     creat a path to a slave
+    _cache is the current server cache
+    _engine is the current description of the server
     """
     def __init__(self,list):
         super(CASAN_slave, self).__init__()
@@ -100,7 +102,6 @@ class CASAN_slave(resource.Resource,object):
 
     @asyncio.coroutine
     def render_get(self, request):
-
         mreq=self.build_request(request)
         #
         # Is the request already present in the cache?
@@ -156,6 +157,7 @@ class GET_casan(resource.Resource,object):
     def render_delete(self, request):
         payload = self._txt.resource_list ().encode()
         return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
+
 """
 #XXX
 l'observation ne fonctionne pas il faut rajouter 2 events dans la boulce
@@ -164,7 +166,8 @@ code RST. Et un pour passer le message de l'esclave vers le client (et
 mettre la valeur dans le cache.). Pour cette partie si il faut modifier la
 fonction _l2reader dans engine.py qui reçoit les messages provenant de
 l'esclave
-
+"""
+"""
 class OBS_CASAN_slave(resource.ObservableResource,object):
     def __init__(self,list):
         super(OBS_CASAN_slave, self).__init__()
@@ -225,8 +228,8 @@ class OBS_CASAN_slave(resource.ObservableResource,object):
 
         return mreq
 
-    """@asyncio.coroutine
-    def until_the_end(self, mreq):"""
+    #@asyncio.coroutine
+    #def until_the_end(self, mreq):
 
     @asyncio.coroutine
     def render_get(self, request):
@@ -254,6 +257,7 @@ class OBS_CASAN_slave(resource.ObservableResource,object):
         payload = mrep.payload.decode ().encode ('ascii')
         return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
 """
+
 class CoAP_Server(object):
     """
     Initialize CoAP server
@@ -284,6 +288,9 @@ class CoAP_Server(object):
         Take a path as an urlor a tuple and creat the asked resource.
         XXX add a handler for dictionnary like pipe for the coap path during
         a slave addition
+        path can be the string or a tuple, it describ the uri
+        cls is a string who describ the called classe
+        obj is a string who describ  the object needed by the called classe
         """
         if isinstance(path, str):
             path = self.url_to_tuple(path)
@@ -294,8 +301,8 @@ class CoAP_Server(object):
             resource_cls = GET_casan
         elif cls == "casan_slave":
             resource_cls = CASAN_slave
-        elif cls == "obs_slave":
-            resource_cls =OBS_CASAN_slave
+        #elif cls == "obs_slave":
+        #   resource_cls =OBS_CASAN_slave
         else :
             print("No type given for the new coap resource.\nNothing done.")
             return
