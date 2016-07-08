@@ -123,6 +123,7 @@ class CASAN_slave(resource.Resource,object):
         # Python black magic: aiohttp.web.Response expects a
         # bytes argument, but mrep.payload is a bytearray
         payload = mrep.payload.decode ().encode ('ascii')
+
         return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
 
 class GETONLY_coap(resource.Resource,object):
@@ -155,16 +156,25 @@ class GET_casan(resource.Resource,object):
     def render_delete(self, request):
         payload = self._txt.resource_list ().encode()
         return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
+"""
+#XXX
+l'observation ne fonctionne pas il faut rajouter 2 events dans la boulce
+principale d'asycio. Un pour stopper l'esclave lors de la reception d'un
+code RST. Et un pour passer le message de l'esclave vers le client (et
+mettre la valeur dans le cache.). Pour cette partie si il faut modifier la
+fonction _l2reader dans engine.py qui reçoit les messages provenant de
+l'esclave
 
 class OBS_CASAN_slave(resource.ObservableResource,object):
     def __init__(self,list):
         super(OBS_CASAN_slave, self).__init__()
         self._engine = list[0]
         self._cache = list[1]
-        self.notify()
+        self.obs = None
+        self._token = None
+        self._event = None
 
     def start_obs_res(self,request):
-
         ll_ssp=list(request.opt._options.keys())
         list_ssp=list()
         for ssp in request.opt._options[ll_ssp[0]]:
@@ -173,6 +183,7 @@ class OBS_CASAN_slave(resource.ObservableResource,object):
         vpath.append(str(list_ssp[-1]))
         meth = str(request.code)
         token=request.token
+        self._token = token
         sid = str(list_ssp[-2])
         qs = request.payload
 
@@ -184,35 +195,65 @@ class OBS_CASAN_slave(resource.ObservableResource,object):
         if sl is None:
             raise aiocoap.error.NotObservable ()
 
-        obs = sl.find_observer (vpath, token)
+        self.obs = sl.find_observer (vpath, token)
 
         #
         # Find slave and resource
         #
 
-        if obs is None:
-            obs = observer.Observer (sl, vpath, token)
-            sl.add_observer (obs)
+        if self.obs is None:
+            self.obs = observer.Observer (sl, vpath, token)
+            sl.add_observer (self.obs)
+        #
+        # Build request
+        #
 
-        return
+        mreq = msg.Msg ()
+        mreq.peer = sl.addr
+        mreq.l2n = sl.l2n
+        mreq.msgtype = msg.Msg.Types.CON
+        mreq.payload = request.payload
 
-    def notify(self):
-        self.updated_state()
-        asyncio.get_event_loop().call_later(6, self.notify)
-
-    def update_observation_count(self, count):
-        if count:
-            # not that it's actually implemented like that here -- unconditional updating works just as well
-            print("Keeping the clock nearby to trigger observations")
+        if meth == 'GET':
+            mreq.msgcode = msg.Msg.Codes.GET
         else:
-            print("Stowing away the clock until someone asks again")
+            raise aiocoap.error.NoResource ()
+
+        up = option.Option.Codes.URI_PATH
+        for p in vpath:
+            mreq.optlist.append (option.Option (up, optval=p))
+
+        return mreq
+
+    """@asyncio.coroutine
+    def until_the_end(self, mreq):"""
 
     @asyncio.coroutine
     def render_get(self, request):
-        self.start_obs_res(request)
-        payload = datetime.datetime.now().strftime("%Y-%m-%d %H:%M").encode('ascii')
-        return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
 
+        #self._event = asyncio.Event()
+
+        mreq = self.start_obs_res(request)
+        mc = self._cache.get (mreq)
+        if mc is not None:
+            # Request found in the cache
+            mreq = mc
+            mrep = mc.req_rep
+
+        else:
+            # Request not found in the cache: send it and wait for a result
+            mrep = yield from mreq.send_request ()
+
+            if mrep is not None:
+                # Add the request (and the linked answer) to the cache
+                self._cache.add (mreq)
+            else:
+                return aiocoap.error.RequestTimedOut (Error)
+        # Python black magic: aiohttp.web.Response expects a
+        # bytes argument, but mrep.payload is a bytearray
+        payload = mrep.payload.decode ().encode ('ascii')
+        return aiocoap.Message(code=aiocoap.CONTENT, payload=payload)
+"""
 class CoAP_Server(object):
     """
     Initialize CoAP server
